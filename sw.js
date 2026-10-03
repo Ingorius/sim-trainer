@@ -1,6 +1,6 @@
-const CACHE = 'sim-trainer-v4';
+const CACHE = 'sim-trainer-v5';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png',
-  './data/m1.js', './data/m2.js', './data/m3.js', './data/m4.js', './data/m5.js', './data/m6.js', './data/fixes.js'];
+  './m1.js', './m2.js', './m3.js', './m4.js', './m5.js', './m6.js', './fixes.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(FILES.map(f => c.add(f).catch(() => {})))));

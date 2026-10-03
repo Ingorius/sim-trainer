@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f4c81">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SIM Trainer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>SIM Prüfungstrainer</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#17202b;--mut:#5f6c7b;--pri:#0f4c81;--pri-tx:#fff;--bd:#d8dee6;--ok:#1b7f3b;--okbg:#e3f4e8;--bad:#b3261e;--badbg:#fbe5e3;--warn:#8a5a00;--warnbg:#fff3d6;--sel:#e1ecf8}
+@media (prefers-color-scheme:dark){:root{--bg:#10151b;--card:#1a222b;--tx:#e8edf2;--mut:#98a5b3;--pri:#5ea3e6;--pri-tx:#0b1520;--bd:#2e3946;--ok:#6fd58c;--okbg:#17321f;--bad:#ff8a80;--badbg:#3b1a18;--warn:#f0c15a;--warnbg:#3a2f10;--sel:#223548}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+header{background:var(--pri);color:var(--pri-tx);padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;flex:1}
+header button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:5px 10px;font-size:14px}
+main{max-width:720px;margin:0 auto;padding:14px 16px 40px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+h2{font-size:17px;margin:0 0 8px}
+.mut{color:var(--mut);font-size:14px}
+.big{font-size:34px;font-weight:700;line-height:1.1}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.btn,a.btn{display:block;width:100%;text-align:center;background:var(--pri);color:var(--pri-tx);border:0;border-radius:12px;padding:13px 14px;font-size:16px;font-weight:600;text-decoration:none}
+button.btn.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri)}
+button.btn:disabled{opacity:.45}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--sel);color:var(--tx);margin-right:4px}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);color:var(--tx);border:1.5px solid var(--bd);border-radius:12px;padding:12px;margin:8px 0;font-size:16px}
+.opt.sel{background:var(--sel);border-color:var(--pri)}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}
+.opt.bad{background:var(--badbg);border-color:var(--bad)}
+.opt .k{font-weight:700;min-width:1.4em}
+.tf{display:flex;gap:6px;margin-top:8px}
+.tf button{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--card);color:var(--tx);font-size:15px;font-weight:600}
+.tf button.sel{background:var(--sel);border-color:var(--pri)}
+.tf button.ok{background:var(--okbg);border-color:var(--ok)}
+.tf button.bad{background:var(--badbg);border-color:var(--bad)}
+.stmt{border:1.5px solid var(--bd);border-radius:12px;padding:10px;margin:8px 0;background:var(--card)}
+.stmt.ok{border-color:var(--ok)}.stmt.bad{border-color:var(--bad)}
+.hint{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:14px;font-weight:600;margin:8px 0}
+.expl{background:var(--sel);border-radius:12px;padding:12px;margin-top:10px;font-size:15px}
+.bar{height:10px;background:var(--bd);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--pri)}
+.nav{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.nav button{width:38px;height:38px;border-radius:8px;border:1.5px solid var(--bd);background:var(--card);color:var(--tx);font-size:13px}
+.nav button.done{background:var(--sel);border-color:var(--pri)}.nav button.cur{outline:2px solid var(--pri)}
+.nav button.ok{background:var(--okbg);border-color:var(--ok)}.nav button.bad{background:var(--badbg);border-color:var(--bad)}
+select,input[type=number]{font-size:16px;padding:9px;border-radius:10px;border:1.5px solid var(--bd);background:var(--card);color:var(--tx);width:100%}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+.sticky{position:sticky;bottom:0;background:var(--bg);padding:10px 0 calc(8px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.timer{font-variant-numeric:tabular-nums;font-weight:700}
+.timer.low{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 4px;border-bottom:1px solid var(--bd);text-align:left}
+</style>
+</head>
+<body>
+<header><h1 id="ttl">SIM Prüfungstrainer</h1><button id="homeBtn" hidden>Menü</button></header>
+<main id="app"></main>
+
+<script src="data/m1.js"></script>
+<script src="data/m2.js"></script>
+<script src="data/m3.js"></script>
+<script src="data/m4.js"></script>
+<script src="data/m5.js"></script>
+<script src="data/m6.js"></script>
+<script src="data/fixes.js"></script>
+<script>
+/* ===== Daten & Zustand ===== */
+const QB = (window.QBANK || []);
+// überarbeitete A+-Optionen anwenden (gleich lange Antworten)
+QB.forEach(q=>{const f=(window.APLUS_FIX||{})[q.id]; if(f&&q.typ==='A+') q.opt=f.map((t,i)=>[t,i===0]);});
+const EXAM_DATE = new Date('2026-11-19T00:00:00');
+const FACH = {neuro:'Neurologie',psych:'Psychiatrie',rheuma:'Rheumatologie',ortho:'Orthopädie/Chirurgie/Chiropraktik',innere:'Allgemeine Innere Medizin',neuropsy:'Neuropsychologie'};
+const MODUL = {1:'Modul 1 – Recht & Versicherungen',2:'Modul 2 – Psyche & Soma',3:'Modul 3 – Fachspezifisch',4:'Modul 4 – Gutachtenarten',5:'Modul 5 – Leitfäden & Broschüren',6:'Modul 6 – Lernziele'};
+const store = {
+  get(){try{return JSON.parse(localStorage.getItem('sim_state'))||{}}catch(e){return {}}},
+  set(s){try{localStorage.setItem('sim_state',JSON.stringify(s))}catch(e){}}
+};
+let S = Object.assign({stats:{},marks:{},hist:[],fach:'other',examMin:150}, store.get());
+if(!S.fach) S.fach='other';
+const hasFach=()=>S.fach&&S.fach!=='other';
+const save=()=>store.set(S);
+const $=s=>document.querySelector(s), app=$('#app');
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+// Formvarianten: aus Kprim-Fragen mit genau 1 falschen (bzw. 1 richtigen) Aussage entsteht eine A- (bzw. A+) Frage
+(function(){
+  const extra=[];
+  QB.forEach(q=>{
+    if(q.typ!=='K'||!/bewerten Sie (jede )?Aussage/.test(q.frage)) return;
+    const f=q.opt.filter(o=>!o[1]).length, t=4-f;
+    const stem=q.frage.replace(/\s*[–-]\s*bewerten Sie.*$/i,'').replace(/\s*bewerten Sie.*$/i,'').replace(/[:\s]+$/,'').trim();
+    if(f===1) extra.push(Object.assign({},q,{id:'a-'+q.id,src:q.id,typ:'A-',frage:stem+': Welche Aussage ist FALSCH?'}));
+    else if(t===1) extra.push(Object.assign({},q,{id:'p-'+q.id,src:q.id,typ:'A+',frage:stem+': Welche Aussage ist RICHTIG?'}));
+  });
+  extra.forEach(e=>QB.push(e));
+})();
+const byId=Object.fromEntries(QB.map(q=>[q.id,q]));
+
+/* ===== Bewertung ===== */
+// A+: richtige Aussage wählen. A-: falsche Aussage wählen. Kprim: 4 Aussagen je wahr/falsch
+// Kprim-Punkte (IML-üblich): 4 richtig = 1, 3 richtig = 0.5, sonst 0
+function score(q,ans){
+  if(ans==null) return 0;
+  if(q.typ==='K'){
+    if(!Array.isArray(ans)) return 0;
+    const n=q.opt.filter((o,i)=>ans[i]===o[1]).length;
+    return n===4?1:n===3?.5:0;
+  }
+  const o=q.opt[ans]; if(!o) return 0;
+  return (q.typ==='A+'? o[1]===true : o[1]===false)?1:0;
+}
+function answered(q,ans){return q.typ==='K'?Array.isArray(ans)&&ans.every(v=>v===true||v===false):ans!=null}
+function record(q,sc){
+  const st=S.stats[q.id]||{box:0,seen:0,right:0,last:0};
+  st.seen++; st.last=Date.now();
+  if(sc===1){st.right++;st.box=Math.min(5,st.box+1)} else {st.box=1}
+  S.stats[q.id]=st; save();
+}
+
+/* ===== Hilfen ===== */
+function daysLeft(){return Math.ceil((EXAM_DATE-new Date())/864e5)}
+function pool({modul,typ,fach,thema,only}){
+  let p=QB.filter(q=>(!modul||q.modul==modul)&&(!typ||q.typ===typ)&&(!thema||q.thema===thema));
+  if(fach==='mine') p=p.filter(q=>q.fach===S.fach); else if(fach==='general') p=p.filter(q=>!q.fach);
+  if(only==='wrong') p=p.filter(q=>(S.stats[q.id]||{}).box===1);
+  if(only==='new') p=p.filter(q=>!S.stats[q.id]);
+  if(only==='marked') p=p.filter(q=>S.marks[q.id]);
+  return p;
+}
+// Priorität: zuletzt falsch > neu > niedrige Box > hohe Box
+function prio(q){const s=S.stats[q.id];if(!s)return 1.5+Math.random();return s.box+Math.random()*1.2-(s.box===1?1:0)}
+const typLabel={'A+':'A+ · eine Aussage ist richtig','A-':'A− · eine Aussage ist FALSCH','K':'Kprim · jede Aussage einzeln bewerten'};
+
+/* ===== Ansicht: Start ===== */
+function home(){
+  $('#ttl').textContent='SIM Prüfungstrainer'; $('#homeBtn').hidden=true;
+  const dl=daysLeft(), seen=Object.keys(S.stats).length, right=Object.values(S.stats).filter(s=>s.box>=3).length;
+  const wrong=pool({only:'wrong'}).length, marked=pool({only:'marked'}).length;
+  app.innerHTML=`
+  <div class="card"><div class="mut">Prüfung am 19.11.2026</div>
+    <div class="big">${dl>0?dl+' Tage':dl===0?'Heute!':'vorbei'}</div>
+    <div class="mut" style="margin-top:6px">${QB.length} Fragen · ${seen} geübt · ${right} sicher (Box ≥3)</div>
+    <div class="bar" style="margin-top:8px"><i style="width:${QB.length?Math.round(right/QB.length*100):0}%"></i></div></div>
+  <div class="card"><h2>Üben</h2>
+    <button class="btn" onclick="setup('practice')">Fragen üben</button>
+    <div class="grid" style="margin-top:10px">
+      <button class="btn sec" onclick="quick('wrong')" ${wrong?'':'disabled'}>Falsche (${wrong})</button>
+      <button class="btn sec" onclick="quick('marked')" ${marked?'':'disabled'}>Markiert (${marked})</button>
+    </div></div>
+  <div class="card"><h2>Prüfungssimulation</h2>
+    <div class="mut" style="margin-bottom:8px">80 Fragen, ${hasFach()?'davon 16 Fachfragen ('+FACH[S.fach]+')':'alle aus dem allgemeinen Pool (Fachrichtung «sonstige»)'}. Kein Feedback bis zur Abgabe.</div>
+    <button class="btn" onclick="setup('exam')">Simulation starten</button></div>
+  <div class="grid"><button class="btn sec" onclick="stats()">Statistik</button><button class="btn sec" onclick="settings()">Einstellungen</button></div>`;
+}
+function quick(only){ startPractice(shuffle(pool({only})).slice(0,20)); }
+
+/* ===== Ansicht: Auswahl ===== */
+function setup(mode){
+  $('#ttl').textContent=mode==='exam'?'Simulation':'Üben'; $('#homeBtn').hidden=false;
+  const modOpts=[`<option value="">Alle Module</option>`].concat([1,2,3,4,5,6].map(m=>`<option value="${m}">${MODUL[m]} (${pool({modul:m}).length})</option>`)).join('');
+  if(mode==='exam'){
+    const gen=pool({fach:'general'}).length, mine=hasFach()?pool({fach:'mine'}).length:0;
+    app.innerHTML=`<div class="card"><h2>Simulation</h2>
+      <div class="mut">Verfügbar: ${gen} allgemeine Fragen${hasFach()?`, ${mine} Fachfragen (${FACH[S.fach]})`:''}.</div>
+      <label>Zeitlimit (Minuten)</label><input type="number" id="min" value="${S.examMin}" min="10" max="300">
+      <div class="mut" style="margin-top:8px">Mit weniger Fragen im Pool wird die Simulation entsprechend kürzer.</div>
+      <button class="btn" style="margin-top:12px" onclick="startExam()">Starten</button></div>`;
+    return;
+  }
+  app.innerHTML=`<div class="card"><h2>Fragen üben</h2>
+    <label>Modul</label><select id="m" onchange="fillThemes()">${modOpts}</select>
+    <label>Thema</label><select id="th"><option value="">Alle Themen</option></select>
+    <label>Fragetyp</label><select id="t"><option value="">Alle</option><option value="A+">A+ (eine richtig)</option><option value="A-">A− (eine falsch)</option><option value="K">Kprim</option></select>
+    <label>Auswahl</label><select id="o"><option value="">Gemischt (Schwächen zuerst)</option><option value="new">Nur neue</option><option value="wrong">Nur falsch beantwortete</option><option value="marked">Nur markierte</option></select>
+    <label>Anzahl</label><select id="n"><option>10</option><option selected>20</option><option>40</option><option value="9999">Alle</option></select>
+    <button class="btn" style="margin-top:14px" onclick="goPractice()">Start</button></div>`;
+  fillThemes();
+}
+function fillThemes(){
+  const m=$('#m').value, th=[...new Set(pool({modul:m}).map(q=>q.thema))].sort();
+  $('#th').innerHTML='<option value="">Alle Themen</option>'+th.map(t=>`<option>${esc(t)}</option>`).join('');
+}
+function goPractice(){
+  const p=pool({modul:$('#m').value,thema:$('#th').value,typ:$('#t').value,only:$('#o').value});
+  if(!p.length){alert('Keine Fragen für diese Auswahl.');return}
+  startPractice(p.sort((a,b)=>prio(a)-prio(b)).slice(0,+$('#n').value));
+}
+
+/* ===== Ansicht: Frage ===== */
+let run=null;
+function startPractice(list){ if(!list.length)return; run={mode:'practice',qs:list,i:0,ans:{},done:{},sc:{}}; showQ(); }
+function startExam(){
+  S.examMin=Math.max(10,+$('#min').value||150); save();
+  const used=new Set();
+  const pick=(list,n)=>{const out=[];for(const q of shuffle(list)){const k=q.src||q.id;if(used.has(k))continue;used.add(k);out.push(q);if(out.length>=n)break}return out};
+  const gen=pick(pool({fach:'general'}),hasFach()?64:80), fa=hasFach()?pick(pool({fach:'mine'}),16):[];
+  const qs=shuffle(gen).concat(shuffle(fa));
+  if(!qs.length){alert('Noch keine Fragen vorhanden.');return}
+  run={mode:'exam',qs,i:0,ans:{},done:{},sc:{},end:Date.now()+S.examMin*60000};
+  tick(); showQ();
+}
+let tmr=null;
+function tick(){clearInterval(tmr);tmr=setInterval(()=>{
+  if(!run||run.mode!=='exam'){clearInterval(tmr);return}
+  const left=run.end-Date.now(), el=$('#tm');
+  if(left<=0){clearInterval(tmr);finish();return}
+  if(el){const m=Math.floor(left/60000),s=Math.floor(left%60000/1000);el.textContent=`${m}:${String(s).padStart(2,'0')}`;el.classList.toggle('low',left<300000)}
+},1000)}
+
+function opts(q){ // stabile, einmal gemischte Reihenfolge je Lauf
+  run.ord=run.ord||{}; if(!run.ord[q.id]) run.ord[q.id]=q.typ==='K'?q.opt.map((_,i)=>i):shuffle(q.opt.map((_,i)=>i));
+  return run.ord[q.id];
+}
+function showQ(){
+  const q=run.qs[run.i], exam=run.mode==='exam', fb=!exam&&run.done[run.i], ans=run.ans[run.i];
+  $('#homeBtn').hidden=false; $('#ttl').textContent=exam?'Simulation':'Üben';
+  const letters='ABCDEFG', ord=opts(q);
+  let body='';
+  if(q.typ==='K'){
+    body=ord.map((oi,k)=>{
+      const o=q.opt[oi], a=Array.isArray(ans)?ans[oi]:undefined;
+      const c=fb?(a===o[1]?'ok':'bad'):'';
+      return `<div class="stmt ${c}"><div>${esc(o[0])}</div><div class="tf">
+        <button class="${a===true?(fb?(o[1]===true?'ok':'bad'):'sel'):(fb&&o[1]===true?'ok':'')}" ${fb?'disabled':''} onclick="setK(${oi},true)">richtig</button>
+        <button class="${a===false?(fb?(o[1]===false?'ok':'bad'):'sel'):(fb&&o[1]===false?'ok':'')}" ${fb?'disabled':''} onclick="setK(${oi},false)">falsch</button></div></div>`}).join('');
+  } else {
+    body=ord.map((oi,k)=>{
+      const o=q.opt[oi], isRight=q.typ==='A+'?o[1]===true:o[1]===false;
+      let c=ans===oi?'sel':''; if(fb){c=isRight?'ok':(ans===oi?'bad':'')}
+      return `<button class="opt ${c}" ${fb?'disabled':''} onclick="setA(${oi})"><span class="k">${letters[k]}</span><span>${esc(o[0])}</span></button>`}).join('');
+  }
+  const total=run.qs.length;
+  const nav=exam?`<div class="nav">${run.qs.map((_,i)=>`<button class="${answered(run.qs[i],run.ans[i])?'done':''} ${i===run.i?'cur':''}" onclick="go(${i})">${i+1}</button>`).join('')}</div>`:'';
+  app.innerHTML=`
+   <div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="mut">Frage ${run.i+1}/${total}</span>${exam?'<span class="timer" id="tm"></span>':`<button class="btn sec" style="width:auto;padding:5px 10px;font-size:14px" onclick="mark()">${S.marks[q.id]?'★ Markiert':'☆ Markieren'}</button>`}</div>
+   <div class="bar"><i style="width:${(run.i+1)/total*100}%"></i></div>
+   <div class="card" style="margin-top:10px">
+     <div style="margin-bottom:6px"><span class="chip">${esc(MODUL[q.modul].split(' – ')[0])}</span><span class="chip">${esc(q.thema)}</span>${q.fach?`<span class="chip">${esc(FACH[q.fach])}</span>`:''}</div>
+     <div class="hint">${typLabel[q.typ]}</div>
+     <div style="font-weight:600;font-size:17px">${esc(q.frage)}</div>${body}
+     ${fb?`<div class="expl"><b>${run.sc[run.i]===1?'Richtig.':run.sc[run.i]===.5?'Teilweise richtig (3 von 4).':'Falsch.'}</b><br>${esc(q.erkl)}${q.quelle?`<div class="mut" style="margin-top:6px">Quelle: ${esc(q.quelle)}</div>`:''}</div>`:''}
+   </div>${nav}
+   <div class="sticky">
+     <button class="btn sec" ${run.i===0?'disabled':''} onclick="go(run.i-1)">‹</button>
+     ${exam?(run.i<total-1?`<button class="btn" onclick="go(run.i+1)">Weiter</button>`:`<button class="btn" onclick="confirmFinish()">Abgeben</button>`)
+       :(!fb?`<button class="btn" ${answered(q,ans)?'':'disabled'} onclick="check()">Prüfen</button>`:(run.i<total-1?`<button class="btn" onclick="go(run.i+1)">Weiter</button>`:`<button class="btn" onclick="finish()">Ergebnis</button>`))}
+   </div>`;
+  if(exam) tick();
+}
+function setA(i){run.ans[run.i]=i;showQ()}
+function setK(i,v){const q=run.qs[run.i];const a=Array.isArray(run.ans[run.i])?run.ans[run.i].slice():q.opt.map(()=>null);a[i]=v;run.ans[run.i]=a;showQ()}
+function go(i){run.i=Math.max(0,Math.min(run.qs.length-1,i));showQ();window.scrollTo(0,0)}
+function mark(){const id=run.qs[run.i].id;S.marks[id]?delete S.marks[id]:S.marks[id]=1;save();showQ()}
+function check(){const q=run.qs[run.i],sc=score(q,run.ans[run.i]);run.sc[run.i]=sc;run.done[run.i]=true;record(q,sc);showQ()}
+function confirmFinish(){
+  const open=run.qs.filter((q,i)=>!answered(q,run.ans[i])).length;
+  if(confirm(open?`${open} Frage(n) unbeantwortet. Trotzdem abgeben?`:'Prüfung abgeben?')) finish();
+}
+
+/* ===== Ergebnis ===== */
+function finish(){
+  clearInterval(tmr);
+  const exam=run.mode==='exam';
+  run.qs.forEach((q,i)=>{ if(exam){const sc=score(q,run.ans[i]);run.sc[i]=sc;record(q,sc)} else if(!run.done[i]&&answered(q,run.ans[i])){run.sc[i]=score(q,run.ans[i]);record(q,run.sc[i])} });
+  const n=run.qs.length, pts=run.qs.reduce((a,q,i)=>a+(run.sc[i]||0),0), pct=Math.round(pts/n*100);
+  S.hist.push({t:Date.now(),mode:run.mode,pts,n}); S.hist=S.hist.slice(-60); save();
+  const wrong=run.qs.map((q,i)=>[q,i]).filter(([q,i])=>(run.sc[i]||0)<1);
+  $('#ttl').textContent='Ergebnis'; $('#homeBtn').hidden=false;
+  app.innerHTML=`<div class="card"><div class="mut">${exam?'Prüfungssimulation':'Übung'}</div>
+    <div class="big">${pct} %</div><div class="mut">${pts} von ${n} Punkten (Kprim: 3/4 richtig = ½ Punkt)</div>
+    <div class="bar" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>
+    ${wrong.length?`<div class="card"><h2>Nicht (voll) richtig – ${wrong.length}</h2>${wrong.map(([q,i])=>`<div style="padding:8px 0;border-bottom:1px solid var(--bd)"><div class="mut">${esc(q.thema)} · ${q.typ}</div>${esc(q.frage)}<div style="margin-top:4px"><a href="#" onclick="review(${i});return false">Lösung ansehen</a></div></div>`).join('')}</div>
+    <button class="btn" onclick="retryWrong()">Diese Fragen erneut üben</button>`:'<div class="card">Alles richtig 🎉</div>'}
+    <button class="btn sec" style="margin-top:10px" onclick="home()">Zum Menü</button>`;
+}
+function review(i){
+  const q=run.qs[i]; run.i=i; run.mode='practice'; run.done[i]=true; if(run.sc[i]==null) run.sc[i]=score(q,run.ans[i]); showQ();
+}
+function retryWrong(){
+  const l=run.qs.filter((q,i)=>(run.sc[i]||0)<1); startPractice(l);
+}
+
+/* ===== Statistik ===== */
+function stats(){
+  $('#ttl').textContent='Statistik'; $('#homeBtn').hidden=false;
+  const rows=[1,2,3,4,5,6].map(m=>{
+    const p=pool({modul:m}), seen=p.filter(q=>S.stats[q.id]), sure=p.filter(q=>(S.stats[q.id]||{}).box>=3);
+    const sn=seen.reduce((a,q)=>a+S.stats[q.id].seen,0), sr=seen.reduce((a,q)=>a+S.stats[q.id].right,0);
+    return `<tr><td>M${m}</td><td>${p.length}</td><td>${seen.length}</td><td>${sure.length}</td><td>${sn?Math.round(sr/sn*100)+' %':'–'}</td></tr>`}).join('');
+  const themes={};
+  QB.forEach(q=>{const s=S.stats[q.id];if(!s)return;const t=themes[q.thema]||(themes[q.thema]={n:0,r:0});t.n+=s.seen;t.r+=s.right});
+  const weak=Object.entries(themes).filter(([k,v])=>v.n>=3).map(([k,v])=>[k,v.r/v.n,v.n]).sort((a,b)=>a[1]-b[1]).slice(0,8);
+  const ex=S.hist.filter(h=>h.mode==='exam').slice(-8).reverse();
+  app.innerHTML=`<div class="card"><h2>Pro Modul</h2><table><tr><th></th><th>Fragen</th><th>Geübt</th><th>Sicher</th><th>Trefferquote</th></tr>${rows}</table></div>
+   <div class="card"><h2>Schwächste Themen</h2>${weak.length?weak.map(([k,r,n])=>`<div class="row" style="justify-content:space-between"><span>${esc(k)}</span><span class="mut">${Math.round(r*100)} % (${n}×)</span></div>`).join(''):'<span class="mut">Noch zu wenig Daten.</span>'}</div>
+   <div class="card"><h2>Letzte Simulationen</h2>${ex.length?ex.map(h=>`<div class="row" style="justify-content:space-between"><span>${new Date(h.t).toLocaleDateString('de-CH')}</span><b>${Math.round(h.pts/h.n*100)} %</b></div>`).join(''):'<span class="mut">Noch keine.</span>'}</div>`;
+}
+
+/* ===== Einstellungen ===== */
+function settings(){
+  $('#ttl').textContent='Einstellungen'; $('#homeBtn').hidden=false;
+  app.innerHTML=`<div class="card"><h2>Fachrichtung (für die 16 Fachfragen)</h2>
+    <select id="f" onchange="S.fach=this.value;save()"><option value="other" ${S.fach==='other'?'selected':''}>Sonstige (16 Fragen aus dem allgemeinen Pool)</option>${Object.entries(FACH).map(([k,v])=>`<option value="${k}" ${S.fach===k?'selected':''}>${v}</option>`).join('')}</select></div>
+   <div class="card"><h2>Fortschritt</h2><button class="btn sec" onclick="if(confirm('Gesamten Lernfortschritt löschen?')){S.stats={};S.marks={};S.hist=[];save();home()}">Fortschritt zurücksetzen</button></div>
+   <div class="card mut">Die Fragen wurden aus den SIM-Kursunterlagen 2026 erstellt und sind eine Lernhilfe, keine offiziellen Prüfungsfragen. Bei Zweifel gilt die Originalunterlage (Quelle unter jeder Frage).</div>`;
+}
+
+$('#homeBtn').onclick=()=>{ if(run&&run.mode==='exam'&&!confirm('Simulation verlassen? Der Fortschritt dieser Simulation geht verloren.'))return; run=null;clearInterval(tmr);home()};
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+home();
+</script>
+</body>
+</html>

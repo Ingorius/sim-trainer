@@ -172,7 +172,7 @@ function home(){
       <button class="btn sec" onclick="quick('wrong')" ${wrong?'':'disabled'}>Falsche (${wrong})</button>
       <button class="btn sec" onclick="quick('marked')" ${marked?'':'disabled'}>Markiert (${marked})</button>
     </div></div>
-  ${savedRun()?`<div class="card" style="border-color:var(--warn)"><h2>Simulation läuft noch</h2><div class="mut" style="margin-bottom:8px">Eine nicht abgegebene Simulation wurde gefunden (${Math.max(0,Math.round((savedRun().end-Date.now())/60000))} Min. Restzeit).</div><div class="grid"><button class="btn" onclick="resumeExam()">Fortsetzen</button><button class="btn sec" onclick="if(confirm('Simulation verwerfen?'))discardRun()">Verwerfen</button></div></div>`:''}
+  ${savedRun()?`<div class="card" style="border-color:var(--warn)"><h2>Simulation läuft noch</h2><div class="mut" style="margin-bottom:8px">Eine nicht abgegebene Simulation wurde gefunden (${Math.max(0,Math.round((savedRun().end-Date.now())/60000))} Min. Restzeit).</div><div class="grid"><button class="btn" onclick="resumeExam()">Fortsetzen</button><button class="btn sec" onclick="askConfirm('Simulation verwerfen?','Verwerfen',discardRun)">Verwerfen</button></div></div>`:''}
   <div class="card"><h2>Prüfungssimulation</h2>
     <div class="mut" style="margin-bottom:8px">80 Fragen, ${hasFach()?'davon 16 Fachfragen ('+FACH[S.fach]+')':'alle aus dem allgemeinen Pool (Fachrichtung «sonstige»)'}. Kein Feedback bis zur Abgabe, Zeitlimit wie in der Originalprüfung (ca. 58 s pro Frage), Fragen markierbar.</div>
     <button class="btn" onclick="setup('exam')">Simulation starten</button></div>
@@ -305,9 +305,19 @@ function setK(i,v){const q=run.qs[run.i];const a=Array.isArray(run.ans[run.i])?r
 function go(i){run.i=Math.max(0,Math.min(run.qs.length-1,i));saveRun();showQ();window.scrollTo(0,0)}
 function mark(){const id=run.qs[run.i].id;S.marks[id]?delete S.marks[id]:S.marks[id]=1;save();showQ()}
 function check(){const q=run.qs[run.i],sc=score(q,run.ans[run.i]);run.sc[run.i]=sc;run.done[run.i]=true;if(!run.finished){record(q,sc);if(run.conf&&run.conf[run.i]!=null)lpAfterCheck(q,sc,run.conf[run.i])}showQ()}
+// Eigener Bestätigungsdialog: window.confirm() ist in der Artefakt-Umgebung blockiert
+function askConfirm(msg,okLabel,onOk){
+  const old=document.getElementById('dlg'); if(old) old.remove();
+  const d=document.createElement('div'); d.id='dlg';
+  d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML=`<div class="card" style="max-width:420px;width:100%;margin:0"><div style="font-weight:600;margin-bottom:12px">${esc(msg)}</div><div class="grid"><button class="btn sec" id="dlgNo">Abbrechen</button><button class="btn" id="dlgOk">${esc(okLabel)}</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelector('#dlgNo').onclick=()=>d.remove();
+  d.querySelector('#dlgOk').onclick=()=>{ d.remove(); onOk(); };
+}
 function confirmFinish(){
   const open=run.qs.filter((q,i)=>!answered(q,run.ans[i])).length, fl=Object.values(run.flag||{}).filter(Boolean).length;
-  if(confirm((open?`${open} Frage(n) unbeantwortet. `:'')+(fl?`${fl} Frage(n) noch markiert. `:'')+(open||fl?'Trotzdem abgeben?':'Prüfung abgeben?'))) finish();
+  askConfirm((open?`${open} Frage(n) unbeantwortet. `:'')+(fl?`${fl} Frage(n) noch markiert. `:'')+(open||fl?'Trotzdem abgeben?':'Prüfung abgeben?'),'Abgeben',()=>finish());
 }
 
 /* ===== Ergebnis ===== */
@@ -359,17 +369,49 @@ function stats(){
    <div class="card"><h2>Letzte Simulationen</h2>${ex.length?ex.map(h=>`<div class="row" style="justify-content:space-between"><span>${new Date(h.t).toLocaleDateString('de-CH')}</span><b>${Math.round(h.pts/h.n*100)} %</b></div>`).join(''):'<span class="mut">Noch keine.</span>'}</div>`;
 }
 
+/* ===== Fortschritt übertragen (Export/Import, zusammenführend) ===== */
+function progExport(){
+  const t=JSON.stringify({sim:1,stats:S.stats,marks:S.marks,hist:S.hist,lp:S.lp||{},fach:S.fach,examMin:S.examMin});
+  const ta=$('#pc'); ta.value=t; ta.focus(); ta.select();
+  try{navigator.clipboard.writeText(t).catch(()=>{})}catch(e){}
+  $('#pm').textContent='Code für '+Object.keys(S.stats).length+' geübte Fragen erzeugt. Text ist markiert: kopieren (Strg+C) und in der anderen Version importieren.';
+}
+function progImport(){
+  let d; try{d=JSON.parse($('#pc').value.trim())}catch(e){$('#pm').textContent='Der Code ist ungültig oder unvollständig.';return}
+  if(!d||!d.stats||typeof d.stats!=='object'){$('#pm').textContent='Kein Fortschritts-Code.';return}
+  let neu=0,upd=0;
+  Object.entries(d.stats).forEach(([id,i])=>{
+    const c=S.stats[id];
+    if(!c){S.stats[id]=i;neu++;return}
+    const m=Object.assign({},((i.last||0)>(c.last||0))?i:c);   // neuerer Stand (Box, falsch/richtig) gewinnt
+    m.seen=Math.max(i.seen||0,c.seen||0); m.right=Math.max(i.right||0,c.right||0);
+    if(JSON.stringify(m)!==JSON.stringify(c)) upd++;
+    S.stats[id]=m;
+  });
+  Object.keys(d.marks||{}).forEach(id=>{S.marks[id]=1});
+  const seen=new Set(S.hist.map(h=>h.t)); (d.hist||[]).forEach(h=>{if(!seen.has(h.t))S.hist.push(h)});
+  S.hist.sort((a,b)=>a.t-b.t); S.hist=S.hist.slice(-60);
+  S.lp=Object.assign({},d.lp||{},S.lp||{});
+  if((!S.fach||S.fach==='other')&&d.fach) S.fach=d.fach;
+  save();
+  $('#pm').textContent='Übernommen: '+neu+' neue Fragen, '+upd+' aktualisiert. Fortschritt jetzt: '+Object.keys(S.stats).length+' Fragen.';
+}
+
 /* ===== Einstellungen ===== */
 function settings(){
   $('#ttl').textContent='Einstellungen'; $('#homeBtn').hidden=false;
   app.innerHTML=`<div class="card"><h2>Fachrichtung (für die 16 Fachfragen)</h2>
     <select id="f" onchange="S.fach=this.value;save()"><option value="other" ${S.fach==='other'?'selected':''}>Sonstige (16 Fragen aus dem allgemeinen Pool)</option>${Object.entries(FACH).map(([k,v])=>`<option value="${k}" ${S.fach===k?'selected':''}>${v}</option>`).join('')}</select></div>
    <div class="card"><h2>Sicherheitsabfrage</h2><label style="display:flex;gap:10px;align-items:center;color:var(--tx)"><input type="checkbox" ${S.lp&&S.lp.confAll?'checked':''} onchange="lpState().confAll=this.checked;save()"> Auch beim freien Üben nach der Sicherheit fragen (im Lernpfad immer aktiv)</label></div>
-   <div class="card"><h2>Fortschritt</h2><button class="btn sec" onclick="if(confirm('Gesamten Lernfortschritt löschen?')){S.stats={};S.marks={};S.hist=[];S.lp={};save();home()}">Fortschritt zurücksetzen</button></div>
+   <div class="card"><h2>Lernfortschritt übertragen</h2><div class="mut">Zwischen Versionen (Artefakt, GitHub-Seite, Handy) wird nichts automatisch geteilt. <b>Exportieren</b> erzeugt einen Code, den Sie in der anderen Version bei <b>Importieren</b> einfügen. Der Import wird mit dem vorhandenen Fortschritt zusammengeführt.</div>
+     <textarea id="pc" rows="5" placeholder="Code hier einfügen oder erzeugen" style="width:100%;margin:8px 0;font-size:12px;border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);padding:8px"></textarea>
+     <div class="grid"><button class="btn sec" onclick="progExport()">Exportieren</button><button class="btn" onclick="progImport()">Importieren</button></div><div id="pm" class="mut" style="margin-top:8px"></div></div>
+   <div class="card"><h2>Fortschritt</h2><button class="btn sec" onclick="askConfirm('Gesamten Lernfortschritt löschen?','Löschen',()=>{S.stats={};S.marks={};S.hist=[];S.lp={};save();home()})">Fortschritt zurücksetzen</button></div>
    <div class="card mut">Die Fragen wurden aus den SIM-Kursunterlagen 2026 erstellt und sind eine Lernhilfe, keine offiziellen Prüfungsfragen. Bei Zweifel gilt die Originalunterlage (Quelle unter jeder Frage).</div>`;
 }
 
-$('#homeBtn').onclick=()=>{ if(run&&run.mode==='exam'&&!run.finished&&!confirm('Zum Menü? Die Simulation bleibt gespeichert und kann fortgesetzt werden (die Zeit läuft weiter).'))return; run=null;clearInterval(tmr);home()};
+$('#homeBtn').onclick=()=>{ const leave=()=>{run=null;clearInterval(tmr);home()};
+  if(run&&run.mode==='exam'&&!run.finished) askConfirm('Zum Menü? Die Simulation bleibt gespeichert und kann fortgesetzt werden (die Zeit läuft weiter).','Zum Menü',leave); else leave(); };
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 home();
 </script>
